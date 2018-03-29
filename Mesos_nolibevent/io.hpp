@@ -15,6 +15,8 @@ namespace io {
 
     virtual bool isOverlapped() const = 0;
 
+    virtual HANDLE get() const = 0;
+
     virtual std::variant<HANDLE, SOCKET> dup() const = 0;
 
   };
@@ -64,6 +66,11 @@ namespace io {
     bool isOverlapped() const override
     {
       return false;
+    }
+
+    HANDLE get() const override
+    {
+      return m_handle;
     }
 
     std::variant<HANDLE, SOCKET> dup() const override
@@ -125,7 +132,7 @@ namespace io {
     {
       WSAPROTOCOL_INFO  info;
       int result = WSADuplicateSocket(m_socket, GetCurrentProcessId(), &info);
-      if (result != SOCKET_ERROR)
+      if (result != 0)
       {
         return INVALID_HANDLE_VALUE;
       }
@@ -144,6 +151,11 @@ namespace io {
       }
 
       return s;
+    }
+
+    HANDLE get() const override
+    {
+      return reinterpret_cast<HANDLE>(m_socket);
     }
 
   protected:
@@ -229,6 +241,11 @@ namespace io {
       }
 
       return target;
+    }
+
+    HANDLE get() const override
+    {
+      return m_handle;
     }
 
   protected:

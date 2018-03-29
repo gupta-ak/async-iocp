@@ -6,15 +6,17 @@
 namespace async {
   class Handle {
   public:
+    ~Handle() {}
+
     virtual std::future<SSIZE_T> readAsync(
       void* data,
-      size_t size) = 0;
+      size_t size) const = 0;
 
     virtual std::future<SSIZE_T> writeAsync(
       const void* data,
-      size_t size) = 0;
+      size_t size) const = 0;
 
-    virtual void close() = 0;
+    virtual void close() const = 0;
   };
 
   // Works like a regular handle.
@@ -22,11 +24,11 @@ namespace async {
   public:
     FileHandle(HANDLE h);
 
-    std::future<SSIZE_T> readAsync(void* data, size_t size) override;
+    std::future<SSIZE_T> readAsync(void* data, size_t size) const override;
 
-    std::future<SSIZE_T> writeAsync(const void* data, size_t size) override;
+    std::future<SSIZE_T> writeAsync(const void* data, size_t size) const override;
 
-    void close() override;
+    void close() const override;
 
   protected:
     HANDLE m_handle;
@@ -34,13 +36,23 @@ namespace async {
 
   class SocketHandle : public Handle {
   public:
+    SocketHandle();
+
     SocketHandle(SOCKET s);
 
-    std::future<SSIZE_T> readAsync(void* data, size_t size) override;
+    std::future<SSIZE_T> readAsync(void* data, size_t size) const override;
 
-    std::future<SSIZE_T> writeAsync(const void* data, size_t size) override;
+    std::future<SSIZE_T> writeAsync(const void* data, size_t size) const override;
 
-    void close() override;
+    std::future<SocketHandle*> accept() const;
+
+    std::future<DWORD> connect(const sockaddr* addr, size_t addr_size) const;
+
+    std::future<SSIZE_T> sendfile(io::Handle* fd, off_t offset, size_t size) const;
+
+    int listen(int connections) const;
+
+    void close() const override;
 
   protected:
     SOCKET m_socket;
@@ -51,11 +63,11 @@ namespace async {
   public:
     PipeHandle(HANDLE h);
 
-    std::future<SSIZE_T> readAsync(void* data, size_t size) override;
+    std::future<SSIZE_T> readAsync(void* data, size_t size) const override;
 
-    std::future<SSIZE_T> writeAsync(const void* data, size_t size) override;
+    std::future<SSIZE_T> writeAsync(const void* data, size_t size) const override;
 
-    void close() override;
+    void close() const override;
 
   protected:
     HANDLE m_handle;
@@ -75,28 +87,4 @@ namespace async {
     size_t size);
 
   void close(Handle* fd);
-
-  /* std::future<io::Handle*> accept(
-    io::Handle* s);
-
-  std::future<void> connect(
-    io::Handle* s,
-    const struct sockaddr* name,
-    int namelen); */
-
-  std::future<SSIZE_T> recv(
-    SocketHandle* s,
-    char* data,
-    size_t size);
-
-  std::future<SSIZE_T> send(
-    SocketHandle* s,
-    const char* data,
-    size_t size);
-
-  /*std::future<size_t> sendfile(
-    io::Handle* s,
-    io::Handle* fd,
-    off_t offset,
-    size_t size);*/
 }

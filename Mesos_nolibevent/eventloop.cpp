@@ -95,7 +95,7 @@ namespace loop {
 
     time.QuadPart -= 116444736000000000UL;
 
-    // time_t has resolution up to milliseconds.
+    // time has returns 100ns segments, so we divide to get seconds.
     return static_cast<double>(time.QuadPart) / 10000000;
   }
 
